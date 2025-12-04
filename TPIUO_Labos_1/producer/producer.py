@@ -27,7 +27,7 @@ def fetch_stackoverflow_questions(
     url = "https://api.stackexchange.com/2.3/questions"
     params = {
         "order": "desc",
-        "sort": "votes",     # highest voted questions first
+        "sort": "creation",     # 10 most freshed
         "site": "stackoverflow",
         "pagesize": pagesize,
         "tagged": tag,
