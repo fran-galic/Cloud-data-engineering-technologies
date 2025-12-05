@@ -1,91 +1,57 @@
 # Cloud-data-engineering-technologies
-Hands-on materials for learning core data engineering processes: ingestion, storage, transformation, validation, and serving. Includes cloud practices with Go, Docker, Kubernetes, MongoDB, Git, Jenkins, and Terraform for modern CI/CD and serverless environments.
 
-- Ime: Fran
-- Prezime: Galić
-- Email: fran.galic@fer.hr
+This repository contains hands-on materials for learning essential processes used in modern cloud-based data engineering projects.  
+Throughout the course, students gain practical skills across the full data lifecycle, including:
 
-### Cloud Data Engineering Lab 1 – StackOverflow → Pub/Sub → Cloud Run
+- data ingestion and storage  
+- data transfer and transformation  
+- data cleaning and validation  
+- data serving and delivery  
 
-This project implements a simple data pipeline on Google Cloud Platform using:
+In addition, the course introduces key engineering practices such as:
 
-- **StackOverflow API** as the data source
-- **Pub/Sub** as the messaging backbone
-- **Cloud Run Job** as a _producer_
-- **Cloud Run Service** as a _consumer_
-- **Artifact Registry** as the container image repository
-- **Python + Flask + Docker** for the application code
+- source code management  
+- serverless execution environments  
+- containerization with Docker  
+- orchestration using Kubernetes  
+- NoSQL databases (MongoDB)  
+- continuous integration and delivery (CI/CD)  
+- infrastructure as code (Terraform)  
 
-Originally the lab was based on Reddit, but this implementation uses **StackOverflow** questions tagged `data-engineering`.
-
----
-
-## Architecture
-
-High-level flow:
-
-1. **Producer (Cloud Run Job)**
-   - Fetches the **10 newest** StackOverflow questions with tag `data-engineering`
-   - Sends each question as a separate JSON message to a **Pub/Sub topic**
-
-2. **Pub/Sub Topic**
-   - Acts as the message broker between producer and consumer
-   - Has a **push subscription** configured
-
-3. **Push Subscription**
-   - For every incoming message, Pub/Sub sends an HTTP `POST` request to the consumer’s Cloud Run URL
-
-4. **Consumer (Cloud Run Service)**
-   - Exposes an HTTP endpoint (`/`) built with Flask
-   - Receives the Pub/Sub push payload, decodes the base64 data, and logs the raw JSON to stdout (visible in Cloud Logging)
-
-The whole system is fully decoupled: producer and consumer never talk to each other directly, they communicate only through Pub/Sub.
+These skills prepare students for real-world data engineering workflows in cloud environments.
 
 ---
 
-## Components
+## Lab 1 — StackOverflow → Pub/Sub → Cloud Run Pipeline
 
-### 1. Producer
+### Overview
 
-File: `TPIUO_Labos_1/producer/producer.py`
+Lab 1 focuses on implementing a simple serverless data ingestion pipeline using Google Cloud Platform.  
+The goal is to understand message-driven architecture, containerized workloads, and event-based processing through Pub/Sub and Cloud Run.
 
-Responsibilities:
+### Implementation Summary
 
-- Load configuration from environment variables:
-  - `PROJECT_ID` – GCP project ID
-  - `PUBSUB_TOPIC` – Pub/Sub topic name
-- Call StackExchange API:
-  - Endpoint: `https://api.stackexchange.com/2.3/questions`
-  - Parameters: `order=desc`, `sort=creation`, `site=stackoverflow`, `tagged=data-engineering`, `pagesize=10`
-- Publish each question to Pub/Sub as a JSON-encoded message using `google-cloud-pubsub`.
+#### **Producer (Cloud Run Job)**  
+- Written in Python  
+- Fetches the **10 newest** StackOverflow questions tagged `data-engineering`  
+- Publishes each question as a JSON message to a Pub/Sub topic  
+- Packaged as a Docker container stored in Artifact Registry  
+- Deployed as a Cloud Run **Job** which runs on demand  
 
-The producer is packaged into a Docker image via:
+#### **Consumer (Cloud Run Service)**  
+- Flask-based Python service  
+- Exposes:
+  - `/listening` — health check endpoint  
+  - `/` — Pub/Sub push message handler  
+- Receives Pub/Sub push messages  
+- Decodes base64 payloads and logs the question data  
+- Runs as a Cloud Run **Service**, scaling to zero when idle  
 
-- `TPIUO_Labos_1/producer/Dockerfile`
+#### **Pub/Sub Integration**  
+- A topic acts as the communication channel between producer and consumer  
+- A **push subscription** automatically forwards every message to the Cloud Run consumer endpoint  
+- The system is fully event-driven and loosely coupled
 
-and deployed as a **Cloud Run Job**.
+This lab demonstrates the fundamentals of serverless data ingestion using containerized Python applications, Pub/Sub messaging, and Cloud Run execution models.
 
 ---
-
-### 2. Consumer
-
-File: `TPIUO_Labos_1/consumer/consumer.py`
-
-Responsibilities:
-
-- Run a Flask app with two routes:
-  - `GET /listening` – simple health-check endpoint (`"Consumer service is listening"`)
-  - `POST /` – Pub/Sub push endpoint
-- For each incoming Pub/Sub message:
-  - Parse the JSON envelope
-  - Base64-decode `message.data`
-  - Log `messageId`, attributes, and the decoded payload to stdout
-
-The consumer is packaged into a Docker image via:
-
-- `TPIUO_Labos_1/consumer/Dockerfile`
-
-and deployed as a **Cloud Run Service**.
-
-Pub/Sub is configured with a **push subscription** that sends messages to the service root URL (`/`).
-
