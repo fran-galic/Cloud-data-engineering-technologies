@@ -64,8 +64,7 @@ def receive_pubsub_message():
     print(f"data (raw string): {decoded_str}")
     print("==== End message ====")
 
-    # Pub/Sub expects a 200 OK to consider the message ACKed.
-    # If you return non-2xx, Pub/Sub will retry delivery.
+    # Pub/Sub expects a 200 OK to consider the message ACKed.T
     return "OK", 200
 
 

@@ -55,3 +55,9 @@ The goal is to understand message-driven architecture, containerized workloads, 
 This lab demonstrates the fundamentals of serverless data ingestion using containerized Python applications, Pub/Sub messaging, and Cloud Run execution models.
 
 ---
+
+Redom pokrenuti:
+-  gcloud auth login    -  za ulogirat se na gcloud
+-  export $(grep -v '^#' .env | xargs)  -  za ucitati enviroment varijable u shell
+- gc run jobs execute so-producer-job --region=${GCP_REGION}    -   za pokrnetui GC run, producer job, koji uzima sa StackOverflow-a (s reditta ne radi i komplicirano je )
+- conusmer servis je vec deployan i netreba nista raditi  (nas GC subscrtion je napravljen u Push nacinu rada da kada dobije pusha ih na nas consumer servis dok mu ovaj ne potvrdi)
