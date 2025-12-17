@@ -30,7 +30,7 @@ jobs:
       - name: EditorConfig check
         run: |
           pip install editorconfig-checker
-          ec .
+          editorconfig-checker
 
       - name: Docker build test (no push)
         run: |
