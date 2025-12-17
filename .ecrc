@@ -1,0 +1,12 @@
+{
+  "Exclude": [
+    ".git/**",
+    ".github/**",
+    ".idea/**",
+    ".venv/**",
+    "**/__pycache__/**",
+    "**/*.pdf",
+    "**/*.png",
+    "uv.lock"
+  ]
+}
