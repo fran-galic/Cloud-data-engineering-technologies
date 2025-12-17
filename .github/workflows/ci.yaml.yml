@@ -1,0 +1,39 @@
+name: Continuous Integration (CI)
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install deps
+        run: uv sync --frozen
+
+      - name: Lint (pylint)
+        run: |
+          uv run pylint \
+            TPIUO_Labos_1/producer/producer.py \
+            TPIUO_Labos_1/consumer/consumer.py \
+            TPIUO_Labos_2/Loader/load_to_bq.py
+
+      - name: EditorConfig check
+        run: |
+          pip install editorconfig-checker
+          ec .
+
+      - name: Docker build test (no push)
+        run: |
+          docker build -t producer-ci -f TPIUO_Labos_1/producer/Dockerfile TPIUO_Labos_1/producer
+          docker build -t consumer-ci -f TPIUO_Labos_1/consumer/Dockerfile TPIUO_Labos_1/consumer
+          docker build -t loader-ci   -f TPIUO_Labos_2/Loader/Dockerfile   TPIUO_Labos_2/Loader

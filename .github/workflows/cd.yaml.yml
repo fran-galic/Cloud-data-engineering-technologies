@@ -1,0 +1,113 @@
+name: Continuous Deployment (CD)
+
+on:
+  push:
+    branches: [ main, master ]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT }}
+  REGION: ${{ vars.GCP_REGION }}
+  AR_REPO: ${{ vars.AR_REPO }}
+
+  CONSUMER_SERVICE: ${{ vars.CONSUMER_SERVICE }}
+  PRODUCER_JOB: ${{ vars.PRODUCER_JOB }}
+  LOADER_JOB: ${{ vars.LOADER_JOB }}
+
+  CONSUMER_SA_EMAIL: ${{ vars.CONSUMER_SA_EMAIL }}
+  PRODUCER_SA_EMAIL: ${{ vars.PRODUCER_SA_EMAIL }}
+  LOADER_SA_EMAIL: ${{ vars.LOADER_SA_EMAIL }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auth to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev --quiet
+
+      - name: Build & Push Producer
+        run: |
+          IMG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/producer"
+          docker build -t "${IMG}:latest" -t "${IMG}:${GITHUB_SHA}" \
+            -f TPIUO_Labos_1/producer/Dockerfile TPIUO_Labos_1/producer
+          docker push "${IMG}:latest"
+          docker push "${IMG}:${GITHUB_SHA}"
+
+      - name: Build & Push Consumer
+        run: |
+          IMG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/consumer"
+          docker build -t "${IMG}:latest" -t "${IMG}:${GITHUB_SHA}" \
+            -f TPIUO_Labos_1/consumer/Dockerfile TPIUO_Labos_1/consumer
+          docker push "${IMG}:latest"
+          docker push "${IMG}:${GITHUB_SHA}"
+
+      - name: Build & Push Loader
+        run: |
+          IMG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/loader"
+          docker build -t "${IMG}:latest" -t "${IMG}:${GITHUB_SHA}" \
+            -f TPIUO_Labos_2/Loader/Dockerfile TPIUO_Labos_2/Loader
+          docker push "${IMG}:latest"
+          docker push "${IMG}:${GITHUB_SHA}"
+
+      - name: Deploy Consumer Service
+        run: |
+          IMG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/consumer:${GITHUB_SHA}"
+          gcloud run deploy "${CONSUMER_SERVICE}" \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --image="${IMG}" \
+            --service-account="${CONSUMER_SA_EMAIL}" \
+            --allow-unauthenticated \
+            --set-env-vars \
+            RAW_BUCKET=gcs-stack-overflow-bucket-raw,\
+            PROCESSED_BUCKET=gcs-stack-overflow-bucket-processed,\
+            PREFIX=stackoverflow,\
+            TIME_FIELD=creation_date
+
+      - name: Deploy Producer Job
+        run: |
+          IMG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/producer:${GITHUB_SHA}"
+          gcloud run jobs deploy "${PRODUCER_JOB}" \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --image="${IMG}" \
+            --service-account="${PRODUCER_SA_EMAIL}" \
+            --set-env-vars \
+            PROJECT_ID=tpiuo-labosi,\
+            PUBSUB_TOPIC=reddit-topic-0036546889,\
+            DLQ_TOPIC=stack-overflow-dead-letter-topic,\
+            STACK_TAG=data-engineering,\
+            PAGE_SIZE=10,\
+            PUBLISH_BAD_MESSAGE=false
+
+      - name: Deploy Loader Job
+        run: |
+          IMG="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/loader:${GITHUB_SHA}"
+          gcloud run jobs deploy "${LOADER_JOB}" \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --image="${IMG}" \
+            --service-account="${LOADER_SA_EMAIL}" \
+            --set-env-vars \
+            PROJECT_ID=tpiuo-labosi,\
+            GCP_REGION=europe-west1,\
+            RAW_BUCKET=gcs-stack-overflow-bucket-raw,\
+            PROCESSED_BUCKET=gcs-stack-overflow-bucket-processed,\
+            PREFIX=stackoverflow,\
+            BQ_DATASET=stackoverflow_pipeline,\
+            BQ_TABLE=stackoverflow_questions
+
+      - name: Execute Producer (optional)
+        run: |
+          gcloud run jobs execute "${PRODUCER_JOB}" \
+            --project="${PROJECT_ID}" \
+            --region="${REGION}" \
+            --wait
