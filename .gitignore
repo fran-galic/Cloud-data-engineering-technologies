@@ -5,3 +5,4 @@ __pycache__/
 .idea/
 *.pyc
 *.json
+TPIUO_Labos_0/zk-single-kafka-single/*

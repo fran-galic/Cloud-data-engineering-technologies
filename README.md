@@ -200,6 +200,7 @@ BigQuery:
 - Dataset: stackoverflow_pipeline
 - Table: stackoverflow_questions
 
+
 ------------------------------------------------------------
 Zaključak
 ------------------------------------------------------------
@@ -212,3 +213,12 @@ Pipeline implementira:
 - Columnar storage (Parquet)
 - Incremental BigQuery load
 - Cloud-native execution (Cloud Run Jobs i Services)
+
+
+      - name: EditorConfig check (non-blocking)
+        continue-on-error: true
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install editorconfig-checker
+          ec -version
+          ec .
