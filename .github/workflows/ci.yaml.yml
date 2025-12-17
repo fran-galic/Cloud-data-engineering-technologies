@@ -29,9 +29,10 @@ jobs:
 
       - name: EditorConfig check
         run: |
-          pip install editorconfig-checker
-          python -m editorconfig_checker.cli
-
+          python -m pip install --upgrade pip
+          python -m pip install editorconfig-checker
+          ec -version
+          ec .
 
       - name: Docker build test (no push)
         run: |
