@@ -200,6 +200,7 @@ BigQuery:
 - Dataset: stackoverflow_pipeline
 - Table: stackoverflow_questions
 
+
 ------------------------------------------------------------
 Zaključak
 ------------------------------------------------------------
