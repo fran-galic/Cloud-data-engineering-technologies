@@ -22,10 +22,10 @@ jobs:
 
       - name: Lint (pylint)
         run: |
-          uv run pylint \
-            TPIUO_Labos_1/producer/producer.py \
-            TPIUO_Labos_1/consumer/consumer.py \
-            TPIUO_Labos_2/Loader/load_to_bq.py
+          uv run pylint --rcfile=.pylintrc \
+          TPIUO_Labos_1/producer/producer.py \
+          TPIUO_Labos_1/consumer/consumer.py \
+          TPIUO_Labos_2/Loader/load_to_bq.py
 
       - name: EditorConfig check
         run: |
