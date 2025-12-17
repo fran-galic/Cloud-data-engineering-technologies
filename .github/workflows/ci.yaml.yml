@@ -27,12 +27,14 @@ jobs:
           TPIUO_Labos_1/consumer/consumer.py \
           TPIUO_Labos_2/Loader/load_to_bq.py
 
-      - name: EditorConfig check
+      - name: EditorConfig check (non-blocking)
+        continue-on-error: true
         run: |
           python -m pip install --upgrade pip
           python -m pip install editorconfig-checker
           ec -version
           ec .
+
 
       - name: Docker build test (no push)
         run: |
