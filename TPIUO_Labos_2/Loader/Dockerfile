@@ -6,7 +6,7 @@ COPY pyproject.toml uv.lock ./
 RUN pip install uv
 RUN uv sync --frozen
 
-COPY load_to_bq.py .
+COPY TPIUO_Labos_2/Loader/load_to_bq.py ./load_to_bq.py
 
 ENV PYTHONUNBUFFERED=1
 

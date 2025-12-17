@@ -14,7 +14,7 @@ RUN pip install uv
 RUN uv sync --frozen
 
 # Copy the actual application code
-COPY producer.py .
+COPY TPIUO_Labos_1/producer/producer.py .
 
 # Default command when container starts
 CMD ["uv", "run", "producer.py"]
