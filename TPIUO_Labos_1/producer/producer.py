@@ -15,9 +15,15 @@ PROJECT_ID = os.getenv("PROJECT_ID")
 PUBSUB_TOPIC = os.getenv("PUBSUB_TOPIC")  # npr. reddit-topic-0036546889 (glavni topic sa schemom)
 DLQ_TOPIC = os.getenv("DLQ_TOPIC")        # npr. stack-overflow-dead-letter-topic (topic bez sheme)
 
-STACK_TAG = os.getenv("STACK_TAG", "data-engineering")
+STACK_TAG = os.getenv("STACK_TAG", "python")
 PAGE_SIZE = int(os.getenv("PAGE_SIZE", "10"))
 PUBLISH_BAD_MESSAGE = os.getenv("PUBLISH_BAD_MESSAGE", "false").lower() == "true"
+
+# NEW: ukupno koliko poruka želimo (default: PAGE_SIZE -> ponašanje kao prije)
+TOTAL_MESSAGES = int(os.getenv("TOTAL_MESSAGES", str(PAGE_SIZE)))
+START_PAGE = int(os.getenv("START_PAGE", "1"))
+MAX_PAGES = int(os.getenv("MAX_PAGES", "1000"))
+SLEEP_BETWEEN_PAGES_SEC = float(os.getenv("SLEEP_BETWEEN_PAGES_SEC", "0"))
 
 if not PROJECT_ID or not PUBSUB_TOPIC or not DLQ_TOPIC:
     raise RuntimeError(
@@ -54,13 +60,14 @@ AVRO_SCHEMA = {
 PARSED_SCHEMA = parse_schema(AVRO_SCHEMA)
 
 
-def fetch_stackoverflow_questions(tag: str, pagesize: int) -> List[Dict]:
+def fetch_stackoverflow_questions(tag: str, pagesize: int, page: int) -> List[Dict]:
     url = "https://api.stackexchange.com/2.3/questions"
     params = {
         "order": "desc",
         "sort": "creation",
         "site": "stackoverflow",
         "pagesize": pagesize,
+        "page": page,
         "tagged": tag,
     }
     resp = requests.get(url, params=params, timeout=15)
@@ -68,9 +75,34 @@ def fetch_stackoverflow_questions(tag: str, pagesize: int) -> List[Dict]:
     return resp.json().get("items", [])
 
 
+def fetch_stackoverflow_questions_many(tag: str, pagesize: int, total: int) -> List[Dict]:
+    # minimal safety
+    if total <= 0:
+        return []
+    if pagesize <= 0:
+        raise ValueError("PAGE_SIZE must be > 0")
+
+    items_all: List[Dict] = []
+    page = START_PAGE
+    pages_fetched = 0
+
+    while len(items_all) < total and pages_fetched < MAX_PAGES:
+        items = fetch_stackoverflow_questions(tag=tag, pagesize=pagesize, page=page)
+        if not items:
+            break
+
+        items_all.extend(items)
+        pages_fetched += 1
+        page += 1
+
+        if SLEEP_BETWEEN_PAGES_SEC > 0:
+            time.sleep(SLEEP_BETWEEN_PAGES_SEC)
+
+    return items_all[:total]
+
+
 def normalize_question(q: Dict) -> Dict:
     owner = q.get("owner") or {}
-    # obavezna polja čitamo direktno (q["..."]), optional preko get
     return {
         "question_id": int(q["question_id"]),
         "title": str(q["title"]),
@@ -121,7 +153,6 @@ def publish_json_to_dlq(
         ensure_ascii=False,
     ).encode("utf-8")
 
-    # Pub/Sub attributes moraju biti stringovi
     attrs = {
         "reason": reason,
         "source_topic": PUBSUB_TOPIC,
@@ -145,7 +176,6 @@ def publish_messages(items: List[Dict]) -> None:
     for q in items:
         normalized = normalize_question(q)
 
-        # 1) AVRO encode
         try:
             payload = avro_encode(normalized)
         except Exception as e:
@@ -160,7 +190,6 @@ def publish_messages(items: List[Dict]) -> None:
             print(f"[DLQ {dlq}] encode failed -> dlq_message_id={dlq_msg_id} question_id={normalized.get('question_id')}")
             continue
 
-        # 2) publish main
         try:
             msg_id = publisher.publish(main_topic_path, data=payload).result()
             ok += 1
@@ -177,11 +206,10 @@ def publish_messages(items: List[Dict]) -> None:
             dlq += 1
             print(f"[DLQ {dlq}] publish failed -> dlq_message_id={dlq_msg_id} question_id={normalized.get('question_id')} reason={reason}")
 
-    # 3) opcionalni test: namjerno loša poruka (ne zadovoljava schemu)
     if PUBLISH_BAD_MESSAGE:
-        bad = {"title": "bad message"}  # fali obavezna polja
+        bad = {"title": "bad message"}
         try:
-            payload = avro_encode(bad)  # ovo će uglavnom failati na encode
+            payload = avro_encode(bad)
             publisher.publish(main_topic_path, data=payload).result()
         except Exception as e:
             dlq_msg_id = publish_json_to_dlq(
@@ -194,14 +222,15 @@ def publish_messages(items: List[Dict]) -> None:
             dlq += 1
             print(f"[DLQ {dlq}] manual bad message -> dlq_message_id={dlq_msg_id}")
 
-    # mala pauza (upute spominju Cloud Run timeout)
     time.sleep(3)
     print(f"Done. Published OK={ok}, sent to DLQ={dlq}")
 
 
 def main():
-    items = fetch_stackoverflow_questions(tag=STACK_TAG, pagesize=PAGE_SIZE)
-    print(f"Fetched {len(items)} questions (tag={STACK_TAG}).")
+    items = fetch_stackoverflow_questions_many(tag=STACK_TAG, pagesize=PAGE_SIZE, total=TOTAL_MESSAGES)
+    print(
+        f"Fetched {len(items)} questions (tag={STACK_TAG}, page_size={PAGE_SIZE}, total={TOTAL_MESSAGES}, start_page={START_PAGE})."
+    )
     if not items:
         return
     publish_messages(items)
