@@ -1,0 +1,31 @@
+[0m16:00:34.089162 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x77b7b247b260>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x77b7b19f6690>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x77b7b2b524e0>]}
+
+
+============================== 16:00:34.091171 | 72c23383-808e-4e9d-bb30-7fe55861b987 ==============================
+[0m16:00:34.091171 [info ] [MainThread]: Running with dbt=1.11.2
+[0m16:00:34.091444 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'log_path': 'logs', 'log_cache_events': 'False', 'log_format': 'default', 'send_anonymous_usage_stats': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'indirect_selection': 'eager', 'debug': 'False', 'version_check': 'True', 'invocation_command': 'dbt init tpiuo_lab3', 'profiles_dir': '/home/fran-galic/.dbt', 'empty': 'None', 'no_print': 'None', 'use_experimental_parser': 'False', 'warn_error': 'None', 'fail_fast': 'False', 'write_json': 'True', 'cache_selected_only': 'False', 'static_parser': 'True', 'introspect': 'True', 'quiet': 'False', 'target_path': 'None', 'use_colors': 'True', 'partial_parse': 'True'}
+[0m16:00:34.095390 [info ] [MainThread]: Creating dbt configuration folder at /home/fran-galic/.dbt
+[0m16:00:34.096038 [debug] [MainThread]: Starter project path: /home/fran-galic/tpiuo-lab3-dbt/.venv/lib/python3.12/site-packages/dbt/include/starter_project
+[0m16:00:34.097068 [info ] [MainThread]: 
+Your new dbt project "tpiuo_lab3" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m16:00:34.097266 [info ] [MainThread]: Setting up your profile.
+[0m16:08:34.128742 [info ] [MainThread]: Profile tpiuo_lab3 written to /home/fran-galic/.dbt/profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m16:08:34.130026 [debug] [MainThread]: Resource report: {"command_name": "init", "command_success": true, "command_wall_clock_time": 479.43863, "process_in_blocks": "1936", "process_kernel_time": 1.107334, "process_mem_max_rss": "364948", "process_out_blocks": "80", "process_user_time": 4.384524}
+[0m16:08:34.131219 [debug] [MainThread]: Command `dbt init` succeeded at 16:08:34.131036 after 479.44 seconds
+[0m16:08:34.131938 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x77b7b1f2bec0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x77b772ff3fb0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x77b77148a7b0>]}
+[0m16:08:34.132734 [debug] [MainThread]: Flushing usage events
+[0m16:08:34.977603 [debug] [MainThread]: An error was encountered while trying to flush usage events

@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: stackoverflow_questions_bronze
+    description: "Bronze sloj: view nad raw StackOverflow tablicom."
+    columns:
+      - name: question_id
+        tests: [not_null]
+      - name: creation_date
+        tests: [not_null]
+      - name: title
+        tests: [not_null]

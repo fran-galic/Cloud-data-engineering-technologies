@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: stackoverflow_questions_silver
+    description: "Silver sloj: deduplicirani i standardizirani StackOverflow podaci (clean title, epoch->timestamp, derived features, sentiment bucket)."
+    columns:
+      - name: question_id
+        tests: [not_null, unique]
+
+      - name: created_ts
+        tests: [not_null]
+
+      - name: created_date
+        tests: [not_null]
+
+      - name: last_activity_date
+        tests: [not_null]
+
+      - name: title_clean
+        tests: [not_null]
+
+      - name: is_closed
+        tests: [not_null]
+
+      - name: sentiment
+        tests:
+          - not_null
+          - accepted_values:
+                arguments:
+                    values: ['HIGH_ENGAGEMENT', 'POSITIVE', 'NEGATIVE', 'NEUTRAL']
