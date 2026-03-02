@@ -1,4 +1,4 @@
-# Cloud Data Engineering Technologies — Labs (TPIUO)
+# Cloud Data Engineering Technologies - Labs (TPIUO)
 
 Hands-on repository for building a modern, cloud-native data engineering workflow end-to-end:
 **ingestion → messaging → validation → storage → warehouse → transformations → data quality → BI**.
@@ -113,7 +113,7 @@ uv run python --version
 
 ---
 
-# Lab 0 — Git/GitHub + Docker + Kafka (local)
+# Lab 0 - Git/GitHub + Docker + Kafka (local)
 
 ### What I did
 - Practiced core **Git workflows**: branching, merging, pull requests, and conflict resolution.
@@ -141,7 +141,7 @@ docker compose down
 
 ---
 
-# Lab 1 — Serverless ingestion: StackOverflow → Pub/Sub → Cloud Run
+# Lab 1 - Serverless ingestion: StackOverflow → Pub/Sub → Cloud Run
 
 ### Goal
 Build a minimal event-driven pipeline on GCP:
@@ -156,8 +156,8 @@ Build a minimal event-driven pipeline on GCP:
 
 **Consumer (Cloud Run Service)**
 - Flask service with endpoints:
-  - `/listening` — health check
-  - `/` — Pub/Sub push handler
+  - `/listening` - health check
+  - `/` - Pub/Sub push handler
 - decodes Pub/Sub payloads and logs/prints structured question data
 - deployed as a **Cloud Run Service** (scales to zero)
 
@@ -190,7 +190,7 @@ Consumer is deployed once and stays available (push subscription delivers messag
 
 ---
 
-# Lab 2 — Production-style pipeline: Pub/Sub (AVRO+DLQ) → GCS (JSON/Parquet) → BigQuery + CI/CD
+# Lab 2 - Production-style pipeline: Pub/Sub (AVRO+DLQ) → GCS (JSON/Parquet) → BigQuery + CI/CD
 
 ### Goal
 Upgrade Lab 1 into a robust pipeline with:
@@ -301,7 +301,7 @@ bq query --use_legacy_sql=false \
 
 ---
 
-# Lab 3 — Analytics layer: dbt (medallion) + Great Expectations + Looker Studio
+# Lab 3 - Analytics layer: dbt (medallion) + Great Expectations + Looker Studio
 
 ### Goal
 Turn the raw warehouse table into an analytics-ready model:
